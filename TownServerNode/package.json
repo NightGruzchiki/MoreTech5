@@ -1,0 +1,15 @@
+{
+  "name": "vtbtown",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "simulation": "^3.0.0"
+  }
+}

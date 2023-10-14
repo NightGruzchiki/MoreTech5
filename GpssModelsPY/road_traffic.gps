@@ -1,0 +1,61 @@
+***********************************************************************
+*                 Traffic at a T-Junction                             *
+***********************************************************************
+*       Erlang Service Times  ...Hyperexponential Arrivals            *
+*                  Time Unit is  1/100 Second                         *
+***********************************************************************
+*  A Hyperexponential Probability Distribution Follows
+Hyper     FVARIABLE (410+((RN2'L'234)#(1343-410)))#(Exponential(2,0,1))        
+*  f(t) = .234(1/4.10) exp(-t/4.1) + .766(1/13.43) exp(-t/13.43)
+***********************************************************************
+Aisle     STORAGE   8
+Mergetime TABLE      MP2,100,100,20
+Crosstime TABLE      MP1,100,100,20
+Transit   TABLE      M1,1000,1000,9
+Arrivals  TABLE      V$Hyper,200,200,20
+***********************************************************************
+          GENERATE   V$Hyper,,300        ;Hyperexponential
+          QUEUE      First
+          GATE SNF   Aisle               ;Is there room in the aisle?        
+          SEIZE      Southlane           ;Crosses highway
+          DEPART     First
+          MARK       1
+*-------Erlang Distribution--------------------------------------------
+          ADVANCE    (Gamma(3,0,4,90))   ;Erlang K=4 waiting time        
+*                                        ;Mean = 360 time units        
+*----------------------------------------------------------------------
+          TABULATE   Crosstime           ;Record crossing time
+          ENTER      Aisle               ;Stand in center aisle
+          RELEASE    Southlane
+          QUEUE      Two                 ;Queue for northlane
+          SEIZE      Northlane
+          DEPART     Two
+          LEAVE      Aisle
+          MARK       2
+* ---------Erlang Distribution-----------------------------------------
+          ADVANCE    (Gamma(4,0,5,80))   ;Erlang K=5 waiting time
+*                                        ;Mean = 400 time units
+* ---------------------------------------------------------------------
+          RELEASE    Northlane
+          TABULATE   Mergetime           ;Merge time to north flow
+          TABULATE   Transit
+          TABULATE   Arrivals
+          TERMINATE
+***********************************************************************
+          GENERATE   5000,500,,,10       ;Southbound traffic
+          SEIZE      Southlane
+          ADVANCE    1200,300            ;Time to pass junction
+          RELEASE    Southlane
+          TERMINATE            
+***********************************************************************        
+          GENERATE   6000,500,,,10       ;Northbound traffic
+          SEIZE      Northlane
+          ADVANCE    1200,300            ;Time to pass junction
+          RELEASE    Northlane
+          TERMINATE            
+***********************************************************************        
+          GENERATE   6000                ;Xact every minute
+          TERMINATE  1        
+***********************************************************************        
+
+
