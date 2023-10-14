@@ -1,0 +1,89 @@
+***********************************************************************
+*  Simulation Model Of Bank Department Customer From/To Parking Lot   *
+*               Time Unit = 1/10 Of a Second                          *
+***********************************************************************
+         RMULT        1187
+First    EQU          2
+Last     EQU          18         
+Qty      VARIABLE     (RN1@96+5)         
+Finance  VARIABLE     (RN1@3+1)#50+200         
+Transit  TABLE        M1,10000,10000,7      
+Items    TABLE        P$Quantity,10,10,10   
+Visitors TABLE        X$Customers,100,50,12 
+Servt    STORAGE      70
+Util     STORAGE      650
+Park     STORAGE      650
+Servtfin VARIABLE     (P$Quantity)#20+P$Amount
+Tbank    VARIABLE     P$Quantity#100
+         INITIAL      X$Customers,0
+***********************************************************************         
+Beg      TRANSFER     Both,,Lost          
+         ENTER        Park                
+         ADVANCE      600                 
+         SAVEVALUE    Customers+,1        
+         ASSIGN       Quantity,V$Qty      
+                                          
+         ASSIGN       Amount,V$Finance    
+                                          
+         TEST LE      P$Quantity,10,QUtil 
+         GATE SNF     Servt,QUtil         
+         QUEUE        Window              
+         ENTER        Servt               
+         DEPART       Window              
+         ASSIGN       Manager,Servt       
+                                          
+         TRANSFER     ,Bank               
+***********************************************************************
+QUtil    QUEUE        Utils                
+         ENTER        Util                 
+         DEPART       Utils                
+         ASSIGN       Manager,Util         
+Bank     ADVANCE      V$Tbank              
+         TEST LE      P$Quantity,10,Norm   
+         COUNT L      Where,First,Last,1,Q 
+         TEST E       P$Where,0,Norm       
+         QUEUE        Xpress               
+         SEIZE        Xpres                
+         DEPART       Xpress               
+         ADVANCE      V$Servtfin           
+         RELEASE      Xpres                
+         LEAVE        P$Manager            
+         TRANSFER     ,Fin
+***********************************************************************
+Norm     SELECT MIN   Minque,First,Last,,Q 
+         QUEUE        P$Minque             
+         SEIZE        P$Minque             
+         DEPART       P$Minque             
+         ADVANCE      V$Servtfin           
+         RELEASE      P$Minque             
+         LEAVE        P$Manager            
+Fin      TABULATE     Transit              
+         TABULATE     Items                
+         SAVEVALUE    Customers-,1         
+         ADVANCE      600                  
+         LEAVE        Park                 
+         TERMINATE
+Lost     TERMINATE                         
+***********************************************************************        
+*    Arrivals for 0 - 30 min.
+         GENERATE     (Exponential(1,0,60)),,,300     
+                                                      
+         TRANSFER     ,Beg
+*    Arrivals for 30 - 90 min.
+         GENERATE     (Exponential(1,0,40)),,18000,900 
+                                                       
+         TRANSFER     ,Beg
+*    Arrivals for 90 - 150 min.
+         GENERATE     (Exponential(1,0,80)),,54000,450 
+                                                       
+         TRANSFER     ,Beg
+*    Arrivals for 150 min +
+         GENERATE     (Exponential(1,0,120)),,90000    
+                                                       
+         TRANSFER     ,Beg
+***********************************************************************
+         GENERATE     600                  
+         TABULATE     Visitors             
+         TERMINATE    1         
+***********************************************************************
+
