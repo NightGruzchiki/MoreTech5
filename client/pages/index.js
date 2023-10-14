@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 const NoSSRMap = dynamic(() => import("@/components/Map"), { ssr: false });
 
 export default function Home() {
+
   return (
     <>
       <Head>
@@ -18,6 +19,10 @@ export default function Home() {
       </Head>
       <main>
         <NoSSRMap />
+
+
+
+
       </main>
     </>
   );
